@@ -1,0 +1,31 @@
+Child Screen Lock is an assistive parental control and screen time management tool designed for parents and legal guardians who demand uncompromising digital privacy and security.
+
+Built with an air-gapped, zero-cloud architecture, Child Screen Lock requests NO INTERNET PERMISSION. Every profile, whitelist rule, and face embedding remains 100% on your physical device.
+
+KEY FEATURES:
+
+★ Strictly Approved App Whitelisting
+Choose exactly which apps your child is permitted to open (educational tools, reading apps, or specific games). Any unapproved app is automatically restricted, immediately returning the device to the home screen.
+
+★ Local Biometric Comparison (Front & Back Camera)
+Register your child's face profile to detect when the child is interacting with the device. Using Google ML Kit on-device machine learning, raw camera feeds are never stored. Faces are converted to mathematical embeddings and encrypted with hardware-backed AES-256-GCM keys via Android KeyStore.
+
+★ Expansive Lock Sessions
+Enforce focused study and sleep intervals from 15 minutes, 1 hour, 24 hours, or custom extended durations up to 1 year with continuous system persistence.
+
+★ Anti-Telemetry & Tracker Neutralization
+When lock sessions are engaged, a strictly local loopback DNS sinkhole intercepts and nullifies background ad trackers and telemetry requests, preserving device performance and family privacy.
+
+★ Tamper-Resistant Parent Security
+• Memory-Hard Key Derivation (scrypt/PBKDF2) prevents PIN discovery.
+• Progressive exponential rate limiting blocks brute-force attempts.
+• Master Recovery Key (RCV-XXXX-XXXX) ensures parents can always recover access or safely uninstall even if their PIN is forgotten.
+• Cryptographic tamper-evident local audit ledger.
+
+★ Zero Cloud & Zero Tracking
+• No internet permission required or requested.
+• Zero data collection, analytics, or third-party SDKs.
+• No subscription fees, no ad tracking, and no external servers.
+
+IMPORTANT LEGAL & OPERATIONAL NOTICE:
+Child Screen Lock is an assistive parental tool and is NOT a substitute for active, direct adult supervision. The application cannot prevent physical hardware manipulation (such as battery removal, physical device resets, or hardware power-offs). All features operate strictly on-device under the explicit consent and control of the authorized parent or device owner.

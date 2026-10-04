@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">Child Screen Lock</string>
+    <string name="accessibility_service_description">Monitors opened apps to enforce child screen time limits and block unapproved apps.</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard_title">Parent Control Panel</string>
+    <string name="lock_status_active">CHILD LOCK ACTIVE</string>
+    <string name="lock_status_inactive">STANDBY / UNLOCKED</string>
+    <string name="lock_now">Start Lock Session</string>
+    <string name="unlock_now">Stop Lock Session</string>
+    <string name="time_remaining">Remaining: %s</string>
+    <string name="set_lock_duration">Set Lock Duration</string>
+    
+    <!-- Navigation Cards -->
+    <string name="card_allowed_apps_title">Allowed Apps Whitelist</string>
+    <string name="card_allowed_apps_desc">Choose which apps your child is allowed to use.</string>
+    
+    <string name="card_face_enroll_title">Child Face Profile</string>
+    <string name="card_face_enroll_desc">Register child face to auto-lock on face recognition.</string>
+    
+    <string name="card_permissions_title">Required Permissions</string>
+    <string name="card_permissions_desc">Grant Accessibility, Overlay, and Camera permissions.</string>
+    
+    <!-- App Selection -->
+    <string name="allowed_apps_title">Manage Allowed Apps</string>
+    <string name="search_apps_hint">Search installed apps…</string>
+    <string name="save_allowed_apps">Save Whitelist</string>
+    
+    <!-- Face Enrollment -->
+    <string name="face_enrollment_title">Child Face Registration</string>
+    <string name="face_enrollment_hint">Position child\'s face inside the circle with good lighting.</string>
+    <string name="btn_capture_face">Register Face</string>
+    <string name="face_registered_success">Face registered successfully!</string>
+    <string name="no_face_detected">No face detected in frame. Please try again.</string>
+    
+    <!-- Lock Overlay Screen -->
+    <string name="overlay_title">Study Time / Screen Time Restricted</string>
+    <string name="overlay_subtitle">This app is not allowed right now. Please return to allowed apps or ask your parent.</string>
+    <string name="overlay_btn_home">Go To Home / Allowed Apps</string>
+    <string name="overlay_btn_parent_override">Parent Unlock</string>
+    <string name="enter_parent_pin">Enter 4-digit Parent PIN</string>
+    <string name="incorrect_pin">Incorrect PIN. Try again.</string>
+</resources>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Anti-Tracking: Explicitly remove Google Play Advertising ID -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
+    <!-- Camera for Face Recognition -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Foreground Services -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Boot Resilience & Background Immunity -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Overlay & System Alert for Lock Screen -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Installed apps query -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" 
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <application
+        android:name=".ChildLockApp"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ChildScreenLock">
+
+        <!-- Deactivate All Transitive Tracking, Ad IDs, and Telemetry -->
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
+        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_analytics_storage" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
+
+        <!-- Dashboard Activity -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Allowed Apps Selection Activity -->
+        <activity
+            android:name=".ui.AppSelectionActivity"
+            android:exported="false"
+            android:label="@string/allowed_apps_title" />
+
+        <!-- Face Enrollment Activity -->
+        <activity
+            android:name=".ui.FaceEnrollmentActivity"
+            android:exported="false"
+            android:label="@string/face_enrollment_title" />
+
+        <!-- Settings Activity -->
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false"
+            android:label="Parent Settings" />
+
+        <!-- Biometric User Verification (Restricts pre-stored children, allows other users) -->
+        <activity
+            android:name=".ui.FaceVerificationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ChildScreenLock.TransparentVerification"
+            android:label="User Verification" />
+
+        <!-- Accessibility Service to Intercept Unapproved Apps (Runs 24/7) -->
+        <service
+            android:name=".service.ChildLockAccessibilityService"
+            android:exported="true"
+            android:label="Child Lock App Blocker"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- Lock Timer Foreground Service (Immune to task removal) -->
+        <service
+            android:name=".service.LockTimerService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Parental screen time countdown timer" />
+        </service>
+
+        <!-- Face Monitoring Foreground Service -->
+        <service
+            android:name=".service.FaceMonitoringService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="camera" />
+
+        <!-- On-Device Telemetry & Tracking Shield VPN Service -->
+        <service
+            android:name=".service.TelemetrySinkholeService"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+
+        <!-- Auto-Restore Active Session on Device Boot -->
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

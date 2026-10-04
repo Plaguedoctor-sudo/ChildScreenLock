@@ -1,0 +1,1 @@
+Air-gapped parental control with app whitelisting & offline face recognition.

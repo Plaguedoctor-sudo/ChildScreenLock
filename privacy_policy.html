@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Child Screen Lock</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 24px 16px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 36px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0f172a;
+            font-size: 26px;
+            margin-top: 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+        h2 {
+            color: #1e3a8a;
+            font-size: 20px;
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+        p, li {
+            font-size: 15px;
+            color: #334155;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .highlight-box {
+            background-color: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="badge">Air-Gapped &bull; Zero Data Collection &bull; Offline Architecture</div>
+    <h1>Privacy Policy for Child Screen Lock</h1>
+    <p><strong>Effective Date:</strong> October 4, 2026<br>
+    <strong>Last Updated:</strong> October 4, 2026</p>
+
+    <div class="highlight-box">
+        <strong>Core Privacy Commitment:</strong> Child Screen Lock is strictly air-gapped and requests <u>NO INTERNET PERMISSION</u>. No user data, device identifiers, or biometric profiles are ever collected, transmitted to remote servers, or shared with third parties.
+    </div>
+
+    <h2>1. Summary &amp; Scope</h2>
+    <p>Child Screen Lock is an assistive parental control tool engineered to help parents and authorized legal guardians manage screen time and limit access to unapproved apps on personal Android devices.</p>
+
+    <h2>2. Facial Biometrics &amp; Camera Data (Children's Privacy Protection)</h2>
+    <p>To detect when a child is holding or interacting with the device, the app utilizes camera frames solely for local geometric comparison:</p>
+    <ul>
+        <li><strong>On-Device Machine Learning:</strong> Camera frames are analyzed locally in real time using on-device ML models.</li>
+        <li><strong>No Photo Storage:</strong> We <strong>never</strong> capture, store, or transmit raw photos, video clips, or camera feeds.</li>
+        <li><strong>Hardware-Encrypted Embeddings:</strong> Facial landmark geometry is converted into a 128-dimensional mathematical vector encrypted via the hardware-backed <strong>Android KeyStore (AES-256-GCM)</strong>.</li>
+        <li><strong>Zeroization:</strong> Parents can delete and permanently zeroize all biometric data with a single tap in the Settings menu.</li>
+    </ul>
+
+    <h2>3. Android Accessibility Service API Disclosure</h2>
+    <p>In accordance with Google Play Accessibility Service policies, Child Screen Lock uses the <code>AccessibilityService</code> API exclusively for the following purpose:</p>
+    <ul>
+        <li><strong>Purpose:</strong> To observe the package name of the active foreground application. When an unapproved app is launched during an active screen time restriction session, the service navigates the device back to the home screen.</li>
+        <li><strong>Data Protection:</strong> The service does not read text input, monitor keystrokes, track passwords, inspect notifications, or access content inside applications.</li>
+    </ul>
+
+    <h2>4. Android VpnService (Local Telemetry &amp; Tracker Blocker)</h2>
+    <p>Child Screen Lock operates a strictly local loopback VPN using Android's <code>VpnService</code> API:</p>
+    <ul>
+        <li><strong>Local DNS Sinkhole:</strong> All network traffic remains on the physical device (loopback). The service intercepts standard DNS queries on UDP 53 to drop queries intended for known advertisement, telemetry, and tracking endpoints (sinkholing them to <code>0.0.0.0</code>).</li>
+        <li><strong>No External Tunneling:</strong> Traffic is never redirected to remote servers or third-party proxies.</li>
+    </ul>
+
+    <h2>5. Security &amp; Anti-Brute-Force Safeguards</h2>
+    <ul>
+        <li><strong>PIN Derivation:</strong> Parent authorization PINs are safeguarded using salted, memory-hard key derivation (scrypt/PBKDF2).</li>
+        <li><strong>Anti-Tamper &amp; Progressive Lockout:</strong> Rapid repeated attempts trigger progressive exponential lockouts to defeat PIN-spray attacks.</li>
+        <li><strong>Master Recovery Key:</strong> Secure offline recovery key provided directly to parents for emergency uninstallation or PIN recovery.</li>
+    </ul>
+
+    <h2>6. Children's Privacy (COPPA &amp; GDPR)</h2>
+    <p>The application complies fully with COPPA and GDPR regulations. Because the software contains no analytics, ad SDKs, or cloud backends, no personal data from minors is collected, stored remotely, or sold.</p>
+
+    <h2>7. Contact</h2>
+    <p>For inquiries regarding this policy or the application's local security architecture, please contact the developer via the official developer email listed on the Google Play Store.</p>
+</div>
+</body>
+</html>
