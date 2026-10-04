@@ -3,8 +3,8 @@ Categories:
   - System
 License: Apache-2.0
 AuthorName: Nitin
-SourceCode: https://github.com/REPLACE_WITH_YOUR_USERNAME/ChildScreenLock
-IssueTracker: https://github.com/REPLACE_WITH_YOUR_USERNAME/ChildScreenLock/issues
+SourceCode: https://github.com/Plaguedoctor-sudo/ChildScreenLock
+IssueTracker: https://github.com/Plaguedoctor-sudo/ChildScreenLock/issues
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
