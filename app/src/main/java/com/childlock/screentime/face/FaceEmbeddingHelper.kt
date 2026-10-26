@@ -25,6 +25,8 @@ class FaceEmbeddingHelper(private val context: Context) {
         private set
     var inputImageSize = 112 // MobileFaceNet standard input dimension
         private set
+    var modelBatchSize = 1
+        private set
 
     init {
         loadModel()
@@ -47,19 +49,47 @@ class FaceEmbeddingHelper(private val context: Context) {
                 setNumThreads(4)
             }
 
-            val interpreter = Interpreter(modelBuffer, options)
+            var interpreter = Interpreter(modelBuffer, options)
+
+            // Inspect input shape and adapt to model's batch dimension
+            val inputShape = interpreter.getInputTensor(0).shape()
+            Log.i(TAG, "Native model input shape: ${inputShape.contentToString()}")
+            var batch = if (inputShape.isNotEmpty()) inputShape[0] else 1
+
+            if (batch > 1) {
+                try {
+                    val singleBatchShape = inputShape.clone()
+                    singleBatchShape[0] = 1
+                    interpreter.resizeInput(0, singleBatchShape)
+                    interpreter.allocateTensors()
+                    batch = 1
+                    Log.i(TAG, "Resized model input tensor to batch size 1")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Cannot resize input to batch 1: ${e.message}. Using native batch size $batch")
+                    try {
+                        interpreter.close()
+                    } catch (ignored: Exception) {}
+                    modelBuffer.rewind()
+                    interpreter = Interpreter(modelBuffer, options)
+                    val reloadedShape = interpreter.getInputTensor(0).shape()
+                    batch = if (reloadedShape.isNotEmpty()) reloadedShape[0] else 1
+                }
+            }
+
             tfliteInterpreter = interpreter
+            modelBatchSize = batch
 
-            val inputShape = interpreter.getInputTensor(0).shape() // e.g. [1, 112, 112, 3]
-            inputImageSize = if (inputShape.size >= 3) inputShape[1] else 112
+            val finalInputShape = interpreter.getInputTensor(0).shape()
+            inputImageSize = if (finalInputShape.size >= 3) finalInputShape[1] else 112
 
-            val outputShape = interpreter.getOutputTensor(0).shape() // e.g. [1, 192] or [1, 128]
-            embeddingDim = if (outputShape.size >= 2) outputShape[1] else 192
+            val outputShape = interpreter.getOutputTensor(0).shape()
+            embeddingDim = if (outputShape.size >= 2) outputShape[outputShape.size - 1] else 192
 
-            Log.i(TAG, "MobileFaceNet model loaded successfully. Input: ${inputImageSize}x$inputImageSize, Dim: $embeddingDim")
+            Log.i(TAG, "MobileFaceNet loaded. Batch: $modelBatchSize, Input: ${inputImageSize}x$inputImageSize, Dim: $embeddingDim")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load MobileFaceNet: ${e.message}. Using fallback feature extractor.", e)
             tfliteInterpreter = null
+            modelBatchSize = 1
             embeddingDim = 192
         }
     }
@@ -72,10 +102,10 @@ class FaceEmbeddingHelper(private val context: Context) {
         val marginX = (boundingBox.width() * 0.15f).toInt()
         val marginY = (boundingBox.height() * 0.15f).toInt()
 
-        val left = max(0, boundingBox.left - marginX)
-        val top = max(0, boundingBox.top - marginY)
-        val right = min(bitmap.width, boundingBox.right + marginX)
-        val bottom = min(bitmap.height, boundingBox.bottom + marginY)
+        val left = max(0, min(bitmap.width - 1, boundingBox.left - marginX))
+        val top = max(0, min(bitmap.height - 1, boundingBox.top - marginY))
+        val right = min(bitmap.width, max(left + 1, boundingBox.right + marginX))
+        val bottom = min(bitmap.height, max(top + 1, boundingBox.bottom + marginY))
 
         val width = max(1, right - left)
         val height = max(1, bottom - top)
@@ -96,32 +126,39 @@ class FaceEmbeddingHelper(private val context: Context) {
 
         val interpreter = tfliteInterpreter
         if (interpreter != null) {
-            return runModelInference(scaled, interpreter)
+            try {
+                return runModelInference(scaled, interpreter)
+            } catch (e: Exception) {
+                Log.e(TAG, "Inference error: ${e.message}. Falling back to spatial extractor.", e)
+            }
         }
 
         return extractSpatialFeatureVector(scaled)
     }
 
     private fun runModelInference(bitmap: Bitmap, interpreter: Interpreter): FloatArray {
-        val byteBuffer = ByteBuffer.allocateDirect(1 * inputImageSize * inputImageSize * 3 * 4).apply {
+        val totalBytes = modelBatchSize * inputImageSize * inputImageSize * 3 * 4
+        val byteBuffer = ByteBuffer.allocateDirect(totalBytes).apply {
             order(ByteOrder.nativeOrder())
         }
 
         val intValues = IntArray(inputImageSize * inputImageSize)
         bitmap.getPixels(intValues, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
 
-        var pixel = 0
-        for (i in 0 until inputImageSize) {
-            for (j in 0 until inputImageSize) {
-                val p = intValues[pixel++]
-                // MobileFaceNet standard normalization: (pixel - 127.5) / 128.0 => [-1, 1]
-                byteBuffer.putFloat((((p shr 16) and 0xFF) - 127.5f) / 128.0f)
-                byteBuffer.putFloat((((p shr 8) and 0xFF) - 127.5f) / 128.0f)
-                byteBuffer.putFloat(((p and 0xFF) - 127.5f) / 128.0f)
+        for (b in 0 until modelBatchSize) {
+            var pixel = 0
+            for (i in 0 until inputImageSize) {
+                for (j in 0 until inputImageSize) {
+                    val p = intValues[pixel++]
+                    // MobileFaceNet standard normalization: (pixel - 127.5) / 128.0 => [-1, 1]
+                    byteBuffer.putFloat((((p shr 16) and 0xFF) - 127.5f) / 128.0f)
+                    byteBuffer.putFloat((((p shr 8) and 0xFF) - 127.5f) / 128.0f)
+                    byteBuffer.putFloat(((p and 0xFF) - 127.5f) / 128.0f)
+                }
             }
         }
 
-        val outputArray = Array(1) { FloatArray(embeddingDim) }
+        val outputArray = Array(modelBatchSize) { FloatArray(embeddingDim) }
         interpreter.run(byteBuffer, outputArray)
         return l2Normalize(outputArray[0])
     }

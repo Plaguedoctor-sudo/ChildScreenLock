@@ -298,21 +298,26 @@ class FaceEnrollmentActivity : AppCompatActivity() {
                 return@addOnSuccessListener
             }
 
-            val face = faces[0]
-            val croppedFace = faceEmbeddingHelper.cropFace(rotatedBitmap, face.boundingBox)
-            val embedding = faceEmbeddingHelper.extractEmbedding(croppedFace)
+            try {
+                val face = faces[0]
+                val croppedFace = faceEmbeddingHelper.cropFace(rotatedBitmap, face.boundingBox)
+                val embedding = faceEmbeddingHelper.extractEmbedding(croppedFace)
 
-            val childName = binding.etChildName.text?.toString()?.trim().let {
-                if (it.isNullOrBlank()) "Child ${prefsManager.getChildFacesCount() + 1}" else it
-            }
+                val childName = binding.etChildName.text?.toString()?.trim().let {
+                    if (it.isNullOrBlank()) "Child ${prefsManager.getChildFacesCount() + 1}" else it
+                }
 
-            val saved = prefsManager.saveChildFace(childName, embedding)
-            if (saved) {
-                Toast.makeText(this, "\"$childName\" face registered successfully!", Toast.LENGTH_LONG).show()
-                showProfileListView()
-            } else {
-                Toast.makeText(this, "Maximum 5 child faces reached.", Toast.LENGTH_SHORT).show()
-                showProfileListView()
+                val saved = prefsManager.saveChildFace(childName, embedding)
+                if (saved) {
+                    Toast.makeText(this, "\"$childName\" face registered successfully!", Toast.LENGTH_LONG).show()
+                    showProfileListView()
+                } else {
+                    Toast.makeText(this, "Maximum 5 child faces reached.", Toast.LENGTH_SHORT).show()
+                    showProfileListView()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("FaceEnrollmentActivity", "Error during face enrollment", e)
+                binding.tvFaceFeedback.text = "Enrollment error: ${e.message}"
             }
         }.addOnFailureListener { e ->
             binding.pbEnrolling.visibility = View.GONE
@@ -328,6 +333,7 @@ class FaceEnrollmentActivity : AppCompatActivity() {
             val bytes = ByteArray(buffer.remaining())
             buffer.get(bytes)
             BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                ?: Bitmap.createBitmap(112, 112, Bitmap.Config.ARGB_8888)
         } catch (e: Exception) {
             Bitmap.createBitmap(112, 112, Bitmap.Config.ARGB_8888)
         }

@@ -17,7 +17,7 @@ class FaceDetectorHelper {
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
             .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
             .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-            .setMinFaceSize(0.20f)
+            .setMinFaceSize(0.15f)
             .build()
         detector = FaceDetection.getClient(options)
     }

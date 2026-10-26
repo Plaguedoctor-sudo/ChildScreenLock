@@ -169,38 +169,42 @@ class FaceVerificationActivity : AppCompatActivity() {
                 return@addOnSuccessListener
             }
 
-            val cropped = faceEmbeddingHelper.cropFace(rotated, face.boundingBox)
-            val candidateEmbedding = faceEmbeddingHelper.extractEmbedding(cropped)
+            try {
+                val cropped = faceEmbeddingHelper.cropFace(rotated, face.boundingBox)
+                val candidateEmbedding = faceEmbeddingHelper.extractEmbedding(cropped)
 
-            val matchingChild = prefsManager.findMatchingChild(candidateEmbedding, faceEmbeddingHelper)
+                val matchingChild = prefsManager.findMatchingChild(candidateEmbedding, faceEmbeddingHelper)
 
-            if (matchingChild != null) {
-                // Registered child recognized -> block access and show lock overlay
-                isVerified = true
-                consecutiveAdultFrames = 0
-                mainHandler.post {
-                    prefsManager.auditLedger.logEvent(
-                        AuditLedger.EVENT_APP_BLOCKED,
-                        "Biometric verification: Child ${matchingChild.name} restricted for package $targetPackage"
-                    )
-                    val overlayIntent = Intent(this, LockOverlayActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        putExtra(LockOverlayActivity.EXTRA_BLOCKED_PACKAGE, targetPackage)
-                    }
-                    startActivity(overlayIntent)
-                    finish()
-                }
-            } else {
-                // Face detected is not a stored child face.
-                // Require consecutive frames to ensure exposure/lighting has stabilized.
-                consecutiveAdultFrames++
-                if (consecutiveAdultFrames >= requiredAdultFrames) {
+                if (matchingChild != null) {
+                    // Registered child recognized -> block access and show lock overlay
                     isVerified = true
+                    consecutiveAdultFrames = 0
                     mainHandler.post {
-                        prefsManager.grantAdultAccess(targetPackage, 30 * 60 * 1000L)
+                        prefsManager.auditLedger.logEvent(
+                            AuditLedger.EVENT_APP_BLOCKED,
+                            "Biometric verification: Child ${matchingChild.name} restricted for package $targetPackage"
+                        )
+                        val overlayIntent = Intent(this, LockOverlayActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            putExtra(LockOverlayActivity.EXTRA_BLOCKED_PACKAGE, targetPackage)
+                        }
+                        startActivity(overlayIntent)
                         finish()
                     }
+                } else {
+                    // Face detected is not a stored child face.
+                    // Require consecutive frames to ensure exposure/lighting has stabilized.
+                    consecutiveAdultFrames++
+                    if (consecutiveAdultFrames >= requiredAdultFrames) {
+                        isVerified = true
+                        mainHandler.post {
+                            prefsManager.grantAdultAccess(targetPackage, 30 * 60 * 1000L)
+                            finish()
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("FaceVerification", "Error processing verification frame", e)
             }
         }.addOnFailureListener {
             // Keep analyzing next frames
