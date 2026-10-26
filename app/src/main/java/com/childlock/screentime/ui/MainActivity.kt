@@ -440,18 +440,30 @@ class MainActivity : AppCompatActivity() {
     private fun showPermissionsDialog() {
         val overlayOk = PermissionHelper.hasOverlayPermission(this)
         val accessibilityOk = PermissionHelper.isAccessibilityServiceEnabled(this)
+        val cameraOk = PermissionHelper.hasCameraPermission(this)
 
-        val options = arrayOf(
-            "1. Enable Accessibility Service (Block unapproved apps)" + if (accessibilityOk) " [✓ Enabled]" else " [Tap to Enable]",
-            "2. Enable Display Over Other Apps (Lock overlay)" + if (overlayOk) " [✓ Enabled]" else " [Tap to Enable]"
+        val options = mutableListOf(
+            "1. Accessibility Service (Block unapproved apps)" + if (accessibilityOk) " [✓ Enabled]" else " [Tap to Enable]",
+            "2. Display Over Other Apps (Lock overlay screen)" + if (overlayOk) " [✓ Enabled]" else " [Tap to Enable]",
+            "3. Camera Access (Face recognition)" + if (cameraOk) " [✓ Enabled]" else " [Tap to Grant]"
         )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !accessibilityOk) {
+            options.add("ℹ️ Android 13+ 'Restricted Setting' Fix: Tap here to open App Info -> 3 dots (top right) -> Allow restricted settings")
+        }
 
         MaterialAlertDialogBuilder(this)
             .setTitle("Setup App Locker Permissions")
-            .setItems(options) { _, which ->
+            .setItems(options.toTypedArray()) { _, which ->
                 when (which) {
                     0 -> startActivity(PermissionHelper.getAccessibilitySettingsIntent())
                     1 -> startActivity(PermissionHelper.getOverlaySettingsIntent(this))
+                    2 -> androidx.core.app.ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(android.Manifest.permission.CAMERA),
+                        101
+                    )
+                    3 -> startActivity(PermissionHelper.getAppDetailsSettingsIntent(this))
                 }
             }
             .setPositiveButton("Done", null)

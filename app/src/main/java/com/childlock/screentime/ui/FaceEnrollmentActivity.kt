@@ -207,9 +207,23 @@ class FaceEnrollmentActivity : AppCompatActivity() {
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
 
-            val cameraSelector = CameraSelector.Builder()
+            val preferredSelector = CameraSelector.Builder()
                 .requireLensFacing(cameraLensFacing)
                 .build()
+
+            val cameraSelector = if (provider.hasCamera(preferredSelector)) {
+                preferredSelector
+            } else if (provider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
+                cameraLensFacing = CameraSelector.LENS_FACING_FRONT
+                CameraSelector.DEFAULT_FRONT_CAMERA
+            } else if (provider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
+                cameraLensFacing = CameraSelector.LENS_FACING_BACK
+                CameraSelector.DEFAULT_BACK_CAMERA
+            } else {
+                Toast.makeText(this, "No camera found on this device", Toast.LENGTH_LONG).show()
+                showProfileListView()
+                return@addListener
+            }
 
             try {
                 provider.unbindAll()
@@ -256,7 +270,11 @@ class FaceEnrollmentActivity : AppCompatActivity() {
     }
 
     private fun processCapturedImage(imageProxy: ImageProxy) {
-        val bitmap = imageProxyToBitmap(imageProxy)
+        val bitmap = try {
+            imageProxy.toBitmap()
+        } catch (e: Exception) {
+            imageProxyToBitmap(imageProxy)
+        }
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
         imageProxy.close()
 
@@ -304,11 +322,15 @@ class FaceEnrollmentActivity : AppCompatActivity() {
     }
 
     private fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap {
-        val planeProxy = imageProxy.planes[0]
-        val buffer: ByteBuffer = planeProxy.buffer
-        val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes)
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        return try {
+            val planeProxy = imageProxy.planes[0]
+            val buffer: ByteBuffer = planeProxy.buffer
+            val bytes = ByteArray(buffer.remaining())
+            buffer.get(bytes)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        } catch (e: Exception) {
+            Bitmap.createBitmap(112, 112, Bitmap.Config.ARGB_8888)
+        }
     }
 
     private fun rotateBitmap(bitmap: Bitmap, degrees: Float): Bitmap {

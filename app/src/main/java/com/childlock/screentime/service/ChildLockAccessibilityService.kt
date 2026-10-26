@@ -74,7 +74,7 @@ class ChildLockAccessibilityService : AccessibilityService() {
         if (prefsManager.isAdultAuthorized(packageName)) return
 
         // 10. If child faces are registered: launch biometric check so OTHER users can access!
-        if (prefsManager.hasChildFaceRegistered() && prefsManager.isFaceGuardEnabled()) {
+        if (prefsManager.hasChildFaceRegistered() && prefsManager.isFaceGuardEnabled() && com.childlock.screentime.util.PermissionHelper.hasCameraPermission(this)) {
             verifyUserBiometrically(packageName)
             return
         }
@@ -100,24 +100,38 @@ class ChildLockAccessibilityService : AccessibilityService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(com.childlock.screentime.ui.FaceVerificationActivity.EXTRA_TARGET_PACKAGE, packageName)
         }
-        startActivity(intent)
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            blockApp(packageName, "🚫 This app is locked by parent")
+        }
     }
 
     private fun blockApp(packageName: String, toastMessage: String) {
+        val now = System.currentTimeMillis()
+        if (packageName == lastBlockedPackage && (now - lastBlockedTime) < 1500L) {
+            return
+        }
+        lastBlockedPackage = packageName
+        lastBlockedTime = now
+
         android.util.Log.e("ChildLockA11y", "BLOCKING APP: pkg=$packageName, msg=$toastMessage")
-        // Instantly kick back to home screen
-        performGlobalAction(GLOBAL_ACTION_HOME)
-        
+
         prefsManager.auditLedger.logEvent(
             AuditLedger.EVENT_APP_BLOCKED,
-            "Package: $packageName"
+            "Package: $packageName ($toastMessage)"
         )
 
-        // Show brief Toast notification (debounced to avoid spamming)
-        val now = System.currentTimeMillis()
-        if (packageName != lastBlockedPackage || (now - lastBlockedTime) > 2000L) {
-            lastBlockedPackage = packageName
-            lastBlockedTime = now
+        // Launch full-screen LockOverlayActivity with timer & parent PIN override
+        val overlayIntent = Intent(this, com.childlock.screentime.ui.LockOverlayActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(com.childlock.screentime.ui.LockOverlayActivity.EXTRA_BLOCKED_PACKAGE, packageName)
+        }
+
+        try {
+            startActivity(overlayIntent)
+        } catch (e: Exception) {
+            performGlobalAction(GLOBAL_ACTION_HOME)
             mainHandler.post {
                 Toast.makeText(applicationContext, toastMessage, Toast.LENGTH_SHORT).show()
             }

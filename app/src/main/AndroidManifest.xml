@@ -8,6 +8,7 @@
     <!-- Camera for Face Recognition -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.front" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Foreground Services -->
@@ -27,6 +28,13 @@
     <!-- Installed apps query -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" 
         tools:ignore="QueryAllPackagesPermission" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
 
     <application
         android:name=".ChildLockApp"
@@ -80,6 +88,14 @@
             android:exported="false"
             android:theme="@style/Theme.ChildScreenLock.TransparentVerification"
             android:label="User Verification" />
+
+        <!-- Screen Time Fullscreen Lock Overlay -->
+        <activity
+            android:name=".ui.LockOverlayActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ChildScreenLock.Fullscreen"
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true" />
 
         <!-- Accessibility Service to Intercept Unapproved Apps (Runs 24/7) -->
         <service

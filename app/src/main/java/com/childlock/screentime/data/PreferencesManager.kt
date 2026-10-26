@@ -309,6 +309,9 @@ class PreferencesManager(private val context: Context) {
     fun findMatchingChild(candidateEmbedding: FloatArray, faceEmbeddingHelper: com.childlock.screentime.face.FaceEmbeddingHelper): ChildFaceProfile? {
         val all = getAllChildEmbeddings()
         for ((profile, storedEmb) in all) {
+            if (candidateEmbedding.size != storedEmb.size) {
+                continue
+            }
             if (faceEmbeddingHelper.isMatch(candidateEmbedding, storedEmb)) {
                 return profile
             }
