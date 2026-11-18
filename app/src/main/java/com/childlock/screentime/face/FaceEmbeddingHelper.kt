@@ -16,14 +16,14 @@ class FaceEmbeddingHelper(private val context: Context) {
 
     companion object {
         private const val TAG = "FaceEmbeddingHelper"
-        private const val MODEL_NAME = "mobile_facenet.tflite"
-        const val DEFAULT_SIMILARITY_THRESHOLD = 0.60f
+        private const val MODEL_NAME = "arcface.tflite" // Updated to ArcFace
+        const val DEFAULT_SIMILARITY_THRESHOLD = 0.45f // ArcFace embeddings are more dispersed; lower threshold usually works better for verification
     }
 
     private var tfliteInterpreter: Interpreter? = null
-    var embeddingDim = 192
+    var embeddingDim = 512 // Upgraded from 192 to 512 for ArcFace
         private set
-    var inputImageSize = 112 // MobileFaceNet standard input dimension
+    var inputImageSize = 112
         private set
     var modelBatchSize = 1
         private set
@@ -150,7 +150,9 @@ class FaceEmbeddingHelper(private val context: Context) {
             for (i in 0 until inputImageSize) {
                 for (j in 0 until inputImageSize) {
                     val p = intValues[pixel++]
-                    // MobileFaceNet standard normalization: (pixel - 127.5) / 128.0 => [-1, 1]
+                    // ArcFace Standard Normalization:
+                    // Typically uses (x - 127.5) / 128.0 or mean subtraction.
+                    // Using the standardized TFLite ArcFace preprocessing:
                     byteBuffer.putFloat((((p shr 16) and 0xFF) - 127.5f) / 128.0f)
                     byteBuffer.putFloat((((p shr 8) and 0xFF) - 127.5f) / 128.0f)
                     byteBuffer.putFloat(((p and 0xFF) - 127.5f) / 128.0f)
@@ -160,6 +162,8 @@ class FaceEmbeddingHelper(private val context: Context) {
 
         val outputArray = Array(modelBatchSize) { FloatArray(embeddingDim) }
         interpreter.run(byteBuffer, outputArray)
+
+        // ArcFace is designed for cosine similarity on L2-normalized vectors
         return l2Normalize(outputArray[0])
     }
 

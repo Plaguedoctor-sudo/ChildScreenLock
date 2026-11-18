@@ -282,8 +282,13 @@ class PreferencesManager(private val context: Context) {
         }
         editor.remove(KEY_CHILD_PROFILES_META)
         editor.remove(KEY_ENCRYPTED_FACE_EMBEDDING)
+
+        // Force clear any adult authorizations when changing models to ensure a clean slate
+        adultAuthorizedPackage = null
+        adultAuthorizedExpiry = 0L
+
         editor.apply()
-        auditLedger.logEvent(AuditLedger.EVENT_FACE_ENROLLED, "All child biometric face profiles zeroized")
+        auditLedger.logEvent(AuditLedger.EVENT_FACE_ENROLLED, "All child biometric face profiles zeroized for model upgrade")
     }
 
     fun getAllChildEmbeddings(): List<Pair<ChildFaceProfile, FloatArray>> {

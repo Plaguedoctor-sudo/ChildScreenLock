@@ -193,13 +193,25 @@ class FaceVerificationActivity : AppCompatActivity() {
                     }
                 } else {
                     // Face detected is not a stored child face.
-                    // Require consecutive frames to ensure exposure/lighting has stabilized.
-                    consecutiveAdultFrames++
-                    if (consecutiveAdultFrames >= requiredAdultFrames) {
+                    // If NO children are registered at all, this face is just a random user (grant access).
+                    // If children ARE registered, but THIS face doesn't match any, it's likely a parent.
+
+                    if (!prefsManager.hasChildFaceRegistered()) {
+                        // No child profiles exist; treat any face as authorized adult
                         isVerified = true
                         mainHandler.post {
                             prefsManager.grantAdultAccess(targetPackage, 30 * 60 * 1000L)
                             finish()
+                        }
+                    } else {
+                        // Children are registered, but this face is not one of them -> Adult/Parent
+                        consecutiveAdultFrames++
+                        if (consecutiveAdultFrames >= requiredAdultFrames) {
+                            isVerified = true
+                            mainHandler.post {
+                                prefsManager.grantAdultAccess(targetPackage, 30 * 60 * 1000L)
+                                finish()
+                            }
                         }
                     }
                 }
